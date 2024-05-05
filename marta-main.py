@@ -2,6 +2,7 @@ from google.protobuf.gtfs_realtime_pb2 import *
 import collections,sqlite3
 messageFeed = FeedMessage()
 conn = sqlite3.connect('marta_schedule.sqlite')
+conn.row_factory = sqlite3.Row
 cur = conn.cursor()
 
 class VehicleTripUpdate:
@@ -43,12 +44,19 @@ for e in messageFeed.entity:
     #print(e,file=open("marta_real_trips.txt","a"))
 Location = collections.namedtuple('Location',['latitude','longitude'])
 loc = Location(33.871590,-84.381127)
-
-stop_sql = \
-'''SELECT stop_id, stop_code, stop_name, stop_lat, stop_lon
-FROM stops
-WHERE stop_lat - 33.871590 BETWEEN -0.005 AND 0.005
-AND stop_lon - -84.381127 BETWEEN -0.005 AND 0.005'''
+def get_nearby_stops(l: Location, rng: float):
+    """rng denoted in degrees of lat/long"""
+    lower_latitude = l.latitude - rng
+    upper_latitude =  l.latitude + rng
+    lower_longitude = l.longitude - rng
+    upper_longitude = l.longitude + rng
+    stop_sql = \
+    f'''SELECT stop_id, stop_code, stop_name, stop_lat, stop_lon 
+    FROM stops 
+    WHERE CAST(stop_lat AS NUMERIC) BETWEEN {lower_latitude} AND {upper_latitude} 
+    AND CAST(stop_lon AS NUMERIC) BETWEEN {lower_longitude} AND {upper_longitude}'''
+    return stop_sql
+stop_sql = get_nearby_stops(loc,0.005)
 cur.execute(stop_sql)
 stops = cur.fetchall()
 print(stops[:10])
