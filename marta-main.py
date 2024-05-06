@@ -61,6 +61,24 @@ cur.execute(stop_sql)
 stops = cur.fetchall()
 print(stops[:10])
 conn.close()
+import folium
+def draw_map():
+    base_map = folium.Map(tiles='CartoDB positron',location= loc, zoom_start=12)
+    radius = 10
+    for stop in stops:
+        folium.CircleMarker(
+            location=[stop["stop_lat"],stop["stop_lon"]],
+            radius=radius,
+            color="cornflowerblue",
+            stroke=False,
+            fill=True,
+            fill_opacity=0.6,
+            opacity=1,
+            popup="{} pixels".format(radius),
+            tooltip="I am in pixels",
+        ).add_to(base_map)
+    base_map.save('base_map.html')
+draw_map()
 """
 
 import requests
