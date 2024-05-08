@@ -42,7 +42,7 @@ for e in messageFeed.entity:
     cur.execute(sql,vehicleTripRecord.getTuple())
     #if e.vehicle is not None and int(rte_id) <= 21622:
     #print(e,file=open("marta_real_trips.txt","a"))
-address_string = '4266 Roswell Rd NE Atlanta, GA 30342'
+address_string = '30 Alabama St SW Atlanta, GA 30303'
 geolocator = geopy.geocoders.Nominatim(user_agent='marta-real-time')
 loc = geolocator.geocode(address_string)
 
