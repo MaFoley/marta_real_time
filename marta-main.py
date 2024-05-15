@@ -64,15 +64,17 @@ stops = cur.fetchall()
 print(stops[:10])
 route_id_sql = f'''SELECT DISTINCT route_id FROM ((trips 
 INNER JOIN stop_times ON trips.trip_id = stop_times.trip_id )
-INNER JOIN stops ON stop_times.stop_id = stops.stop_id) WHERE stops.stop_id = ?'''
-chosen_stop_id = stops[0]['stop_id']
-cur.execute(route_id_sql, (chosen_stop_id,))
-route = cur.fetchall()
+INNER JOIN stops ON stop_times.stop_id = stops.stop_id) WHERE CAST(stop_lat AS NUMERIC) BETWEEN {loc.latitude - 0.005} AND {loc.latitude + 0.005}
+AND CAST(stop_lon AS NUMBERIC) BETWEEN {loc.longitude - 0.005} AND {loc.longitude + 0.005}'''
+#chosen_stop_id = stops[0]['stop_id']
+cur.execute(route_id_sql)
+routes = cur.fetchall()
 vehicle_position_sql = '''
-SELECT vehicle_id, route_id, position_latitude, position_longitude, vehicle_label
+SELECT vehicle_id, routes.route_id, route_short_name, position_latitude, position_longitude, vehicle_label
 FROM real_time_vehicles
-WHERE route_id = ? '''
-cur.execute(vehicle_position_sql,(route[0]['route_id'],))
+INNER JOIN routes ON real_time_vehicles.route_id = routes.route_id
+WHERE routes.route_id IN (''' + route_id_sql + ')'
+cur.execute(vehicle_position_sql)
 vehicles = cur.fetchall()
 conn.close()
 import folium
@@ -88,7 +90,7 @@ def draw_map():
             fill=True,
             fill_opacity=0.6,
             opacity=1,
-            popup="{} pixels".format(radius),
+            popup="{}".format(veh["route_short_name"]),
             tooltip=veh["vehicle_label"],
         ).add_to(base_map)
     for stop in stops:

@@ -1,11 +1,17 @@
 #! create sqlite db from csvs
 import csv, sqlite3
+from pathlib import Path
 def create_schedule(last_update_date: str):
-    with open('last_update_date.txt','rw') as f:
-        most_recent_update_date = f.readline()
-        if last_update_date == most_recent_update_date:
-            return
-        else:
+    filePath = Path('last_update_date.txt')
+    if filePath.exists():
+        with open('last_update_date.txt','r+') as f:
+            most_recent_update_date = f.readline()
+    else:
+        most_recent_update_date = r'01/01/2024'
+    if last_update_date == most_recent_update_date:
+        return
+    else:
+        with open('last_update_date.txt','w') as f:
             f.write(last_update_date)
 
     con = sqlite3.connect("marta_schedule.sqlite")
