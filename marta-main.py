@@ -1,6 +1,7 @@
 from google.protobuf.gtfs_realtime_pb2 import * 
 import collections, geopy.geocoders, sqlite3
 messageFeed = FeedMessage()
+trip_updates = FeedMessage()
 conn = sqlite3.connect('marta_schedule.sqlite')
 conn.row_factory = sqlite3.Row
 cur = conn.cursor()
@@ -36,12 +37,16 @@ class VehicleTripUpdate:
 
 with open('vehiclepositions.pb',"rb") as f:
     messageFeed.ParseFromString(f.read())
+with open('tripupdates.pb',"rb") as f:
+    trip_updates.ParseFromString(f.read())
 sql = 'INSERT INTO real_time_vehicles VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
 for e in messageFeed.entity:
     vehicleTripRecord = VehicleTripUpdate(e)
     cur.execute(sql,vehicleTripRecord.getTuple())
     #if e.vehicle is not None and int(rte_id) <= 21622:
     #print(e,file=open("marta_real_trips.txt","a"))
+for t in trip_updates.entity:
+    print(t.ListFields())
 address_string = '30 Alabama St SW Atlanta, GA 30303'
 geolocator = geopy.geocoders.Nominatim(user_agent='marta-real-time')
 loc = geolocator.geocode(address_string)
